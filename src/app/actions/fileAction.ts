@@ -1,8 +1,7 @@
 "use server";
 
 import { v2 as cloudinary } from "cloudinary";
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+
 
 // Configure Cloudinary
 cloudinary.config({
@@ -19,8 +18,7 @@ const storage = new CloudinaryStorage({
     },
 });
 
-// Create multer upload instance
-// const upload = multer({ storage: storage });
+
 
 export async function uploadAction(formData: FormData) {
 
@@ -66,4 +64,57 @@ export async function uploadAction(formData: FormData) {
     } catch (error) {
         return { success: false };
     }
+}
+
+
+
+
+// only  need of cloudinary 
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+
+
+export async function getImgLink(formData: FormData) {
+
+  const file = formData.get("imgFile");
+
+  if (!file) {
+    return { success: false };
+  }
+
+  // Convert file to buffer
+  const bytes = await (file as File).arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+
+  try {
+
+    // Upload directly to Cloudinary
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: "uploads" },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      // Write buffer to stream
+      const bufferStream = require('stream').Readable.from(buffer);
+      bufferStream.pipe(uploadStream);
+    });
+
+    return {
+      success: true,
+      url: result.secure_url
+    };
+
+  } catch (error) {
+    return { success: false };
+  }
 }

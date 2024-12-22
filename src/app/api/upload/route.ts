@@ -10,7 +10,11 @@ export const config = {
 export async function POST(request: Request) {
   // Parse the incoming form data
   const formData = await request.formData();
+
+  console.log("now the raw formData",formData)
+  
   const file = formData.get('file') as File;
+  console.log("now the raw formData get ",file)
 
   if (!file || typeof file === 'string') {
     return new Response('No file uploaded', { status: 400 });
@@ -29,6 +33,8 @@ export async function POST(request: Request) {
   // Save the file to the local directory
   const buffer = Buffer.from(await file.arrayBuffer());
 
+  console.log("buffer value here ",buffer)
+ 
   try {
     fs.writeFileSync(filePath, buffer);
 
